@@ -1,0 +1,6 @@
+{"time":"2019-07-14T19:43:37+0100", "level":"error","thread": 1, "message":"Error message here", "tags":["tag1", "tag2", "tag3"], "context":{ "error": "Some error here"}}
+{"time":"2019-07-14T19:45:37+0100", "level":"error", "thread": 1, "message":"Another error message", "tags":["tag1"]}
+{"time":"2019-07-14T19:47:37+0100", "level":"info","thread": 1, "message":"Info message", "tags":["tag1", "tag3"]}
+{"time":"2019-07-14T19:43:37+0100", "level":"debug","thread": 3, "message":"Debug message", "tags":["tag2", "tag3"]}
+{"time":"2019-07-14T19:45:37+0100", "level":"warning","thread": 4, "message":"Warning message here", "tags":["tag1", "tag2"]}
+{"time":"2019-07-14T19:45:37+0100", "level":"trace","thread": 4, "message":"Trace message", "tags":["tag1", "tag2", "tag3"]}

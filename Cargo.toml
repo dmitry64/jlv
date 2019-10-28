@@ -1,0 +1,10 @@
+[package]
+name = "jlv"
+version = "0.1.0"
+authors = ["Dmitry Z."]
+edition = "2018"
+
+[dependencies]
+json = "0.12.0"
+colored = "1.8.0"
+clap = "2.33.0"
