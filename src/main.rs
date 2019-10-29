@@ -80,29 +80,65 @@ fn read_file(path: &String, follow: bool) {
     let mut reader = BufReader::new(file);
     let mut header_shown: bool = false;
     let mut columns: HashMap<String, Column> = HashMap::new();
+    let mut common_buffer: Vec<u8> = vec![];
     loop {
-        let mut line: String = String::new();
-        let res = reader.read_line(&mut line);
+        let mut read_buffer: [u8; 256] = [0; 256];
+        let res = reader.read(&mut read_buffer);
         match res {
             Ok(length) => {
-                if length == 0 {
-                    if !follow {
-                        return;
-                    }
-                } else {
-                    if !header_shown {
-                        let cols = extract_header(&line);
-                        print_header(&cols);
-                        for column in cols {
-                            columns.insert(column.title.clone(), column);
+                common_buffer.extend(read_buffer[0..length].iter().cloned());
+                let mut might_be_lines = true;
+                while might_be_lines {
+                    match try_get_line(&common_buffer) {
+                        Some(index) => {
+                            let line: String = std::str::from_utf8(&common_buffer[0..index])
+                                .unwrap()
+                                .to_string();
+
+                            common_buffer.drain(0..index);
+
+                            if length == 0 {
+                                if !follow {
+                                    return;
+                                }
+                            } else {
+                                if !header_shown {
+                                    let cols = extract_header(&line);
+                                    print_header(&cols);
+                                    for column in cols {
+                                        columns.insert(column.title.clone(), column);
+                                    }
+                                    header_shown = true;
+                                }
+                                print_json_line(&line, &columns);
+                            }
                         }
-                        header_shown = true;
+                        None => {
+                            might_be_lines = false;
+                        }
                     }
-                    print_json_line(&line, &columns);
                 }
             }
             Err(err) => println!("Error! {}", err),
         }
+    }
+}
+
+fn try_get_line(byte_array: &Vec<u8>) -> Option<usize> {
+    let length = byte_array.len();
+    let mut found: bool = false;
+    let mut index: usize = 0;
+    for i in 0..length {
+        if byte_array[i] == '\n' as u8 {
+            found = true;
+            index = i;
+            break;
+        }
+    }
+    if found {
+        return Some(index + 1);
+    } else {
+        return None;
     }
 }
 
