@@ -3,6 +3,7 @@ use colored::*;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, prelude::*, BufReader};
+use std::{thread, time};
 
 pub enum PrintColor {
     Black,
@@ -82,10 +83,19 @@ fn read_file(path: &String, follow: bool) {
     let mut columns: HashMap<String, Column> = HashMap::new();
     let mut common_buffer: Vec<u8> = vec![];
     loop {
-        let mut read_buffer: [u8; 256] = [0; 256];
-        let res = reader.read(&mut read_buffer);
+        let mut read_buffer: Vec<u8> = vec![];
+        let res = reader.read_until('\n' as u8, &mut read_buffer);
         match res {
             Ok(length) => {
+                if length == 0 {
+                    if !follow {
+                        return;
+                    } else {
+                        let poll_time = time::Duration::from_millis(10);
+                        thread::sleep(poll_time);
+                    }
+                }
+
                 common_buffer.extend(read_buffer[0..length].iter().cloned());
                 let mut might_be_lines = true;
                 while might_be_lines {
@@ -97,11 +107,7 @@ fn read_file(path: &String, follow: bool) {
 
                             common_buffer.drain(0..index);
 
-                            if length == 0 {
-                                if !follow {
-                                    return;
-                                }
-                            } else {
+                            if length != 0 {
                                 if !header_shown {
                                     let cols = extract_header(&line);
                                     print_header(&cols);
