@@ -2,8 +2,11 @@ use clap::*;
 use colored::*;
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{self, prelude::*, BufReader};
+use std::io::SeekFrom;
+use std::io::{self, prelude::*, BufReader, Seek};
 use std::{thread, time};
+
+const APP_VERSION: &str = "0.5.0";
 
 pub enum PrintColor {
     Black,
@@ -49,7 +52,7 @@ pub struct Column {
 
 fn main() -> std::io::Result<()> {
     let matches = App::new("Json Log Viewer")
-        .version("0.1")
+        .version(APP_VERSION)
         .author("Dmitry Z. <dz64@protonmail.com>")
         .about("Tool for json logs visualization")
         .arg(Arg::with_name("follow").short("f").long("follow"))
@@ -60,28 +63,66 @@ fn main() -> std::io::Result<()> {
                 .index(1),
         )
         .arg(
-            Arg::with_name("v")
-                .short("v")
-                .multiple(true)
-                .help("Sets the level of verbosity"),
+            Arg::with_name("num-lines")
+                .long("num-lines")
+                .short("n")
+                .takes_value(true)
+                .help("Number of lines to print from the end"),
         )
         .get_matches();
 
     let is_follow = matches.is_present("follow");
+    let num_lines = match matches.is_present("num-lines") {
+        true => match matches.value_of("num-lines") {
+            Some(val) => val.parse::<u32>().unwrap(),
+            None => 30,
+        },
+        false => 30,
+    };
 
     let path = matches.value_of("INPUT").unwrap().to_string();
 
-    read_file(&path, is_follow);
+    read_file(&path, is_follow, num_lines);
     io::stdout().flush().unwrap();
     Ok(())
 }
 
-fn read_file(path: &String, follow: bool) {
-    let file = File::open(path).unwrap();
-    let mut reader = BufReader::new(file);
+fn seek_to_end<R>(reader: &mut BufReader<R>, num_lines: u32)
+where
+    R: Seek + Read,
+{
+    reader.seek(SeekFrom::End(0)).unwrap();
+
+    let mut lines = 0;
+    let mut buf = vec![0u8; 1];
+
+    while (reader.seek(SeekFrom::Current(-1)).unwrap() > 0) {
+        reader.read(&mut buf).unwrap();
+        if buf[0] == '\n' as u8 {
+            lines += 1;
+            if (lines > num_lines) {
+                break;
+            }
+        }
+        reader.seek(SeekFrom::Current(-1)).unwrap();
+    }
+}
+
+fn read_file(path: &String, follow: bool, num_lines: u32) {
+    let file = File::open(path);
+    let actual_file;
+    match file {
+        Ok(f) => actual_file = f,
+        Err(why) => {
+            println!("Failed to open file! Reason {}", why);
+            return;
+        }
+    }
+    let mut reader = BufReader::new(actual_file);
     let mut header_shown: bool = false;
     let mut columns: HashMap<String, Column> = HashMap::new();
     let mut common_buffer: Vec<u8> = vec![];
+    seek_to_end(&mut reader, num_lines);
     loop {
         let mut read_buffer: Vec<u8> = vec![];
         let res = reader.read_until('\n' as u8, &mut read_buffer);
@@ -262,8 +303,8 @@ fn get_log_level(level: &String) -> LogLevel {
     match &lowercase[..] {
         "info" | "i" => LogLevel::Info,
         "debug" | "d" => LogLevel::Debug,
-        "warning" | "w" => LogLevel::Warning,
-        "error" | "e" => LogLevel::Error,
+        "warning" | "w" | "warn" => LogLevel::Warning,
+        "error" | "e" | "err" => LogLevel::Error,
         "trace" | "t" => LogLevel::Trace,
         _ => LogLevel::Info,
     }
