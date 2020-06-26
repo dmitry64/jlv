@@ -6,7 +6,7 @@ use std::io::SeekFrom;
 use std::io::{self, prelude::*, BufReader, Seek};
 use std::{thread, time};
 
-const APP_VERSION: &str = "0.5.0";
+const APP_VERSION: &str = "0.5.1";
 
 pub enum PrintColor {
     Black,
@@ -34,6 +34,7 @@ pub enum LogLevel {
     Warning,
     Error,
     Trace,
+    Fatal,
 }
 
 pub enum DataType {
@@ -51,7 +52,7 @@ pub struct Column {
 }
 
 fn main() -> std::io::Result<()> {
-    let matches = App::new("Json Log Viewer")
+    let settings = App::new("Json Log Viewer")
         .version(APP_VERSION)
         .author("Dmitry Z. <dz64@protonmail.com>")
         .about("Tool for json logs visualization")
@@ -71,16 +72,16 @@ fn main() -> std::io::Result<()> {
         )
         .get_matches();
 
-    let is_follow = matches.is_present("follow");
-    let num_lines = match matches.is_present("num-lines") {
-        true => match matches.value_of("num-lines") {
+    let is_follow = settings.is_present("follow");
+    let num_lines = match settings.is_present("num-lines") {
+        true => match settings.value_of("num-lines") {
             Some(val) => val.parse::<u32>().unwrap(),
             None => 30,
         },
         false => 30,
     };
 
-    let path = matches.value_of("INPUT").unwrap().to_string();
+    let path = settings.value_of("INPUT").unwrap().to_string();
 
     read_file(&path, is_follow, num_lines);
     io::stdout().flush().unwrap();
@@ -88,19 +89,19 @@ fn main() -> std::io::Result<()> {
 }
 
 fn seek_to_end<R>(reader: &mut BufReader<R>, num_lines: u32)
-where
-    R: Seek + Read,
+    where
+        R: Seek + Read,
 {
     reader.seek(SeekFrom::End(0)).unwrap();
 
     let mut lines = 0;
     let mut buf = vec![0u8; 1];
 
-    while (reader.seek(SeekFrom::Current(-1)).unwrap() > 0) {
+    while reader.seek(SeekFrom::Current(-1)).unwrap() > 0 {
         reader.read(&mut buf).unwrap();
         if buf[0] == '\n' as u8 {
             lines += 1;
-            if (lines > num_lines) {
+            if lines > num_lines {
                 break;
             }
         }
@@ -219,10 +220,10 @@ fn extract_header(first_line: &String) -> Vec<Column> {
                 }
 
                 let column: Column = Column {
-                    title: title,
+                    title,
                     width: (value.to_string().len()) as u32,
-                    data_type: data_type,
-                    print_style: print_style,
+                    data_type,
+                    print_style,
                 };
                 result.push(column);
             }
@@ -275,7 +276,7 @@ fn print_json_line(line: &String, columns: &HashMap<String, Column>) {
                         print.push(styled);
                     }
                     None => print.push(
-                        (key.to_string() + &":[".to_string() + &value.to_string() + "]")
+                        ("[".to_string() + &value.to_string() + "]")
                             .black()
                             .dimmed(),
                     ),
@@ -288,7 +289,8 @@ fn print_json_line(line: &String, columns: &HashMap<String, Column>) {
                     LogLevel::Error => print!("{}", string.red()),
                     LogLevel::Warning => print!("{}", string.yellow()),
                     LogLevel::Info => print!("{}", string.white()),
-                    LogLevel::Trace => print!("{}", string.purple()),
+                    LogLevel::Trace => print!("{}", string.blue()),
+                    LogLevel::Fatal => print!("{}", string.purple()),
                 }
             }
             println!();
@@ -306,6 +308,7 @@ fn get_log_level(level: &String) -> LogLevel {
         "warning" | "w" | "warn" => LogLevel::Warning,
         "error" | "e" | "err" => LogLevel::Error,
         "trace" | "t" => LogLevel::Trace,
+        "fatal" | "f" => LogLevel::Fatal,
         _ => LogLevel::Info,
     }
 }

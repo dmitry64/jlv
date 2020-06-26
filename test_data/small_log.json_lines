@@ -1,9 +1,12 @@
-{"time":"2019-07-14T19:43:37+0100", "level":"debug","thread": 3, "message":"Debug message", "tags":["tag2", "tag3"]}
-{"time":"2019-07-14T19:45:37+0100", "level":"warning","thread": 4, "message":"Warning message here", "tags":["tag1", "tag2"]}
-{"time":"2019-07-14T19:45:37+0100", "level":"trace","thread": 4, "message":"Trace message", "tags":["tag1", "tag2", "tag3"]}
-{"time":"2019-07-14T19:43:37+0100", "level":"error","thread": 1, "message":"Error message here", "tags":["tag1", "tag2", "tag3"], "context":{ "error": "Some error here"}}
-{"time":"2019-07-14T19:45:37+0100", "level":"error", "thread": 1, "message":"Another error message", "tags":["tag1"]}
+{"time":"2019-07-14T19:43:37+0100", "level":"debug","thread": 3, "message":"Debug message", "tags":["tag2", "tag3"], "user_id":123456}
+{"time":"2019-07-14T19:45:37+0100", "level":"warning","thread": 4, "message":"Warning message here", "tags":["Apple", "Banana", "Orange"], "user_id":123456}
+{"time":"2019-07-14T19:45:37+0100", "level":"trace","thread": 4, "message":"Trace message", "tags":["Foo", "Bar", "foobar"]}
+{"time":"2019-07-14T19:43:37+0100", "level":"error","thread": 1, "message":"Error message here", "tags":["Cat", "Dog", "Snake"], "context":{ "error": "Some error here"}}
+{"time":"2019-07-14T19:45:37+0100", "level":"error", "thread": 1, "message":"Another error message", "tags":["tag1"], "flags":{"flag":true}}
 {"time":"2019-07-14T19:47:37+0100", "level":"info","thread": 1, "message":"Info message", "tags":["tag1", "tag3"]}
-{"time":"2019-07-14T19:43:37+0100", "level":"debug","thread": 3, "message":"Debug message", "tags":["tag2", "tag3"]}
-{"time":"2019-07-14T19:45:37+0100", "level":"warning","thread": 4, "message":"Warning message here", "tags":["tag1", "tag2"]}
-{"time":"2019-07-14T19:45:37+0100", "level":"trace","thread": 4, "message":"Trace message", "tags":["tag1", "tag2", "tag3"]}
+{"time":"2019-07-14T19:43:37+0100", "level":"debug","thread": 3, "message":"Long debug message..............................", "tags":["Something", "tag3"]}
+{"time":"2019-07-14T19:45:37+0100", "level":"warning","thread": 4, "message":"Another warning message here", "tags":["tag1", "tag2"]}
+{"time":"2019-07-14T19:45:37+0100", "level":"trace","thread": 4, "message":"Another trace message", "tags":["TAG_A", "TAG_B", "TAG_C"]}
+{"time":"2019-07-14T19:45:37+0100", "level":"fatal","thread": 2, "message":"Fatal message!", "tags":[]}
+{"time":"2019-07-14T19:47:37+0100", "level":"info","thread": 7, "message":"Info here..."}
+{"time":"2019-07-14T19:45:37+0100", "level":"error", "thread": 1, "message":"error"}
