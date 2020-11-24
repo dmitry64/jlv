@@ -3,6 +3,7 @@ name = "jlv"
 version = "0.5.1"
 authors = ["Dmitry Z."]
 edition = "2018"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 json = "0.12.4"
